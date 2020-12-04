@@ -1,116 +1,84 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
-use App\Model\User;
-use DB;
+
+use App\Models\User;  
+use Illuminate\Http\Response;
+use App\Traits\ApiResponser;  
+use Illuminate\Http\Request;  
+use DB; 
 
 
 Class UserController extends Controller {
+    use ApiResponser;
+
     private $request;
 
     public function __construct(Request $request){
         $this->request = $request;
     }
 
+    public function getUsers(){
 
-    public function loginPage(){
-        return view('login');
-
+        $users = DB::connection('mysql')
+        ->select("Select * from tbluser");
+        return $this->successResponse($users);
     }
-    public function CRUDPage(){
-        return view('CRUD');
+    
 
-    }
-    public function verifyUser(){
-
-        $user=$_POST['username'];
-        $pass=$_POST['password'];
-
-        $log= app('db')->select("select * from tbluser where username='$user' and password='$pass'");   
-
-        if(empty($log)){
-            echo '<script>alert("Incorrect username and password")</script>';
-
-            return view('login');
-            
-        }else{
-            echo '<script>alert("Success")</script>';
-
-            return view('CRUD');
-        }
-    }
-
-    public function newUserPage(){
-        return view('add');
-    }
-
-    public function insertUser(){
-
-        $user=$_POST['username'];
-        $pass=$_POST['password'];
-
-        $insert =app('db')->select("insert into tbluser(username,password) values('$user','$pass')");
-        echo'<script>alert("User added")</script>';
-
-        return view('CRUD');
-
-    }
-     
-    public function deleteUserPage(){
-        return view('delete');
-    }
-
-    public function delete(){
-        $ID = $_POST['id'];
-        $check= app('db')->select("select * from tbluser where ID='$ID'");
-
-        if (empty($check)) {
-            echo '<script>alert("User does not exist")</script>';
-            return view('delete');
-        } else {
-            $query = app('db')->select("delete from tbluser where ID = '$ID'");
-            echo '<script>alert("DELETED")</script>';
-            return view('delete');
-        }
-    }
-    public function viewUserPage(){
-
-        $ID = app('db')->select("SELECT ID FROM tbluser");
-        $username = app('db')->select("SELECT username FROM tbluser");
-        $password = app('db')->select("SELECT password FROM tbluser");
-
-
-        $data = [
-            'ID' => $ID,
-            'username' => $username,
-            'password' => $password
+    public function addUser(Request $request ){
+        $rules = [
+            'username' => 'required|max:20',
+            'password' => 'required|max:20',
         ];
-        return view('view')->with($data);
+
+        $this->validate($request,$rules);
+
+        $user = User::create($request->all());
+
+        return $this->successResponse($user, Response::HTTP_CREATED);
     }
 
-    public function updateUserPage()
+    
+    public function show($id)
     {
-        return view('update');
+
+         $user = User::findOrFail($id);
+         return $this->successResponse($user);
+         
+       
     }
-    public function update()
+
+    
+    public function update(Request $request,$id)
     {
+        $rules = [
+        'username' => 'max:20',
+        'password' => 'max:20',
+        ];
 
-        $ID = $_POST['id'];
-        $user = $_POST['username'];
-        $pass = $_POST['password'];
+        $this->validate($request, $rules);
+        $user = User::findOrFail($id);
+            
+        $user->fill($request->all());
 
-        $check = app('db')->select("select * from tbluser where ID = $ID");
-
-        if (empty($check)) {
-            echo '<script>alert("$ID")</script>';
-            return view('update');
-        }else {
-            app('db')->table('tbluser')->where('ID', $ID)->update(['username' => $user, 'password' => $pass]);
-            echo '<script>alert("Update successful")</script>';
-            return view('crud');
+        
+        if ($user->isClean()) {
+            return $this->errorResponse('At least one value must change', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+
+        $user->save();
+        return $this->successResponse($user);
+       
+        
     }
-   
+
+    public function delete($id)
+    {
+        $user = User::findOrFail($id)->delete();
+        return response()->json('User deleted successfully',200);
+
+        
+    }
 
 }

@@ -13,50 +13,17 @@
 |
 */
 
-
 $router->get('/', function () use ($router) {
     return $router->app->version();
-}); 
-
-// unsecure routes
-$router->group(['prefix' => 'api'], function () use ($router) {
-    $router->get('/users',['uses' => 'UserController@getUsers']);
 });
 
-$router->get('login',[
-    'as'=>'login','uses'=>'UserController@loginPage'
-]);
-$router->get('CRUD',[
-    'as'=>'CRUD','uses'=>'UserController@CRUDPage'
-]);
-$router->post('verify',[
-    'as'=>'verify','uses'=> 'UserController@verifyUser'
-]);
-
-$router->post('add',[
-    'as'=> 'add','uses'=>'UserController@newUserPage'
-]);
-
-$router->post('insert',[
-    'as'=>'insert','uses'=>'UserController@insertUser'
-]);
-
-$router->post('delUserPage', [
-    'as' => 'delUserPage', 'uses' => 'UserController@deleteUserPage'
-]);
-$router->post('viewUser', [
-    'as' => 'viewUser', 'uses' => 'UserController@viewUserPage'
-]);
-
-$router->post('deleteUser', [
-    'as' => 'deleteUser', 'uses' => 'UserController@delete'
-]);
-
-$router->post('updateUserPage', [
-    'as' => 'updateUserPage', 'uses' => 'UserController@updateUserPage'
-]);
+//$router->get('/usersjob', 'UserJobController@index');
+//$router->get('/userjob/{id}', 'UserJobController@show');
 
 
-$router->post('updateUser', [
-    'as' => 'updateUser', 'uses' => 'UserController@update'
-]);
+$router->get('/users', 'UserController@getUsers');   // get all users records
+$router->post('/users/add', 'UserController@addUser');  // create new user record
+$router->get('/users/{id}', 'UserController@show'); // gets user by id
+$router->put('/users/update/{id}', 'UserController@update'); // update user record
+$router->patch('/users/update{id}', 'UserController@update'); // update user record
+$router->delete('/users/delete/{id}', 'UserController@delete'); // delete record
